@@ -2,6 +2,7 @@ package me.kcybulski.aoc.templategenerator
 
 import me.kcybulski.aoc.utilities.Day
 import mu.KotlinLogging
+import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
@@ -32,12 +33,15 @@ internal class FetchDayData(
         .body()
         .wholeText()
 
-    private fun fetchDayPage(day: Day) = Jsoup.connect(dayPageUrl(day))
-        .followRedirects(false)
-        .execute()
-        .takeIf { it.statusCode() == 200 }
-        ?.parse()
-        ?.body()
+    private fun fetchDayPage(day: Day) = try {
+        Jsoup.connect(dayPageUrl(day))
+            .followRedirects(false)
+            .execute()
+            .parse()
+            .body()
+    } catch (e: HttpStatusException) {
+        null
+    }
 
     private fun getDayTitle(rawTitle: String) =
         "^.*: (.*) ---$".toRegex()

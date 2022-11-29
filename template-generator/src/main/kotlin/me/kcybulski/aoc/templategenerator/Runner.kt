@@ -12,7 +12,7 @@ private val generateTemplate = GenerateTemplate()
 
 fun main() {
     val localDate = LocalDate.now()
-    val day = Day(localDate.year - 1, localDate.dayOfMonth - 10)
+    val day = Day(localDate.year, localDate.dayOfMonth)
 
     runBlocking {
         generateTemplate.initializeModule(day)
