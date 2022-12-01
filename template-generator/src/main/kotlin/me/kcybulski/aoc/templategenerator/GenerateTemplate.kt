@@ -27,7 +27,7 @@ internal class GenerateTemplate(
             createFile(modulePath(day), buildGradle.fileName, buildGradle.content())
 
             logger.info { "Registering new module to gradle" }
-            settingsGradle(day).appendText("\ninclude(\"aoc-${day.year}\")")
+            settingsGradle().appendText("\ninclude(\"aoc-${day.year}\")")
         } else {
             logger.info { "Module aoc-${day.year} already exists" }
         }
@@ -42,6 +42,7 @@ internal class GenerateTemplate(
         createFile(testResourcesPath(data), "input.txt", data.testInput)
         createFile(resourcesPath(data), "description.html", data.description)
         createFile(resourcesPath(data), "description.md", copyDown.convert(data.description))
+        readme().appendText("\n${data.dayPrefix} ☑️ ${data.formattedTitle}")
     }
 
     private fun createFile(
@@ -80,8 +81,11 @@ internal class GenerateTemplate(
     private fun modulePath(day: Day): Path =
         Paths.get("./aoc-${day.year}")
 
-    private fun settingsGradle(day: Day): Path =
+    private fun settingsGradle(): Path =
         Paths.get("./settings.gradle.kts")
+
+    private fun readme(): Path =
+        Paths.get("./README.md")
 
     class KotlinFile(
         private val packageName: String,
