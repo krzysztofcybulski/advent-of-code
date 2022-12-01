@@ -5,7 +5,7 @@ import mu.KotlinLogging
 class Input(
     val lines: List<String>,
     private val lineSplitter: String = "\\s+",
-    hasHeader: Boolean
+    private val hasHeader: Boolean
 ) {
 
     inline fun <reified T> header(splitter: String = ",") = lineToType<T>(lines.first(), splitter.toRegex())
@@ -18,13 +18,25 @@ class Input(
 
     inline fun <reified T> toList(): List<T> = dataLines.map { lineToType(it, lineSplitterRegex) }
 
-    fun group(size: Int, withHeaders: Boolean = false): List<Input> = dataLines
-        .chunked(size)
-        .map { Input(it, lineSplitter, withHeaders) }
+    inline fun <reified T> groupLists(): List<List<T>> = group().map(Input::toList)
+
+    fun group(withHeaders: Boolean = false, lines: List<String> = this@Input.lines): List<Input> {
+        if(lines.isEmpty()) {
+            return emptyList()
+        }
+        val group = lines.takeWhile(String::isNotBlank)
+        return listOf(Input(group, lineSplitter, withHeaders)) + group(withHeaders, lines.drop(group.size + 1))
+    }
 
     inline fun <reified T> lineToType(line: String, lineSplitter: Regex): T {
         if (T::class == String::class) {
             return line as T
+        }
+        if (T::class == Long::class) {
+            return line.toLong() as T
+        }
+        if (T::class == Int::class) {
+            return line.toInt() as T
         }
         if (T::class == List::class) {
             val params = params(line, lineSplitter)
