@@ -43,6 +43,8 @@ internal class GenerateTemplate(
         createFile(resourcesPath(data), "description.html", data.description)
         createFile(resourcesPath(data), "description.md", copyDown.convert(data.description))
         readme().appendText("\n${data.dayPrefix} ☑️ ${data.formattedTitle}")
+        val runner = RunnerFile(data)
+        kotlinSourcesPath(data).resolve(runner.fileName).writeText(runner.content())
     }
 
     private fun createFile(
@@ -97,12 +99,15 @@ internal class GenerateTemplate(
         fun content() = """
             package $packageName.aoc${data.day.year}
             
-            import $packageName.aoc.utilities.Input
-            import $packageName.aoc.utilities.Input.Companion.load
-            import $packageName.aoc.utilities.copyToClipboard
-            import $packageName.aoc.utilities.sendSolution
+            import me.kcybulski.aoc.utilities.Input
+            import me.kcybulski.aoc.utilities.InputConfiguration
+            import me.kcybulski.aoc.utilities.WithInput
             
-            class ${data.formattedTitle} {
+            class ${data.formattedTitle}: WithInput {
+            
+                override val input: InputConfiguration.() -> Unit = {
+                    filename = "${data.formattedTitleDayPrefixed}"
+                }
             
                 data class RawInput(
                     val line: String
@@ -111,13 +116,6 @@ internal class GenerateTemplate(
                 fun solve(input: Input): Long {
                     return 0
                 }
-            }
-            
-            fun main() {
-                load("${data.formattedTitleDayPrefixed}")
-                    .let(${data.formattedTitle}()::solve)
-                    .also(::copyToClipboard)
-                    .also(::sendSolution)
             }
         """.trimIndent()
     }
@@ -134,7 +132,7 @@ internal class GenerateTemplate(
 
             import io.kotest.core.spec.style.FunSpec
             import io.kotest.matchers.shouldBe
-            import me.kcybulski.aoc.utilities.Input
+            import me.kcybulski.aoc.utilities.Input.Companion.load
             
             class ${data.formattedTitle}Test: FunSpec() {
             
@@ -142,9 +140,9 @@ internal class GenerateTemplate(
             
                     val algorithm = ${data.formattedTitle}()
             
-                    test("example") {
+                    test("part 2") {
                         // when
-                        val solution = algorithm.solve(Input.load("${data.formattedTitleDayPrefixed}"))
+                        val solution = algorithm.solve(load(algorithm))
 
                         // then
                         solution shouldBe ${data.testSolution}
@@ -161,6 +159,29 @@ internal class GenerateTemplate(
         fun content() = """
             dependencies {
                 implementation(project(":utilities"))
+            }
+        """.trimIndent()
+    }
+
+    class RunnerFile(
+        val data: DayData
+    ) {
+
+        val fileName = "00Runner.kt"
+
+        fun content() = """
+            package me.kcybulski.aoc2022
+
+            import me.kcybulski.aoc.utilities.Input.Companion.load
+            import me.kcybulski.aoc.utilities.copyToClipboard
+            import me.kcybulski.aoc.utilities.sendSolution
+            
+            fun main() {
+                val algorithm = ${data.formattedTitle}()
+                load(algorithm)
+                    .let(algorithm::solve)
+                    .also(::copyToClipboard)
+                    .also(::sendSolution)
             }
         """.trimIndent()
     }

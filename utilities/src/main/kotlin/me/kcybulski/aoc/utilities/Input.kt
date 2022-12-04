@@ -67,7 +67,7 @@ class Input(
     companion object {
         val logger = KotlinLogging.logger {}
 
-        inline fun load(
+        fun load(
             path: String,
             lineSplitter: String = "\\s+",
             hasHeader: Boolean? = null
@@ -84,5 +84,10 @@ class Input(
                         hasHeader = hasHeader ?: it.getOrNull(1)?.isBlank() ?: false
                     )
                 }
+
+        fun load(withInput: WithInput): Input {
+            val inputConfig = InputConfiguration().also { withInput.input(it) }
+            return load(inputConfig.filename!!, inputConfig.lineSplitter, inputConfig.hasHeader)
+        }
     }
 }
